@@ -24,6 +24,12 @@ export default function AdminDashboard({ navigation }) {
       >
         <Text style={styles.buttonText}>Manage Faculty</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => navigation.navigate("ClassManagement")}
+      >
+        <Text style={styles.buttonText}>Manage Classes</Text>
+      </TouchableOpacity>
 
       <TouchableOpacity style={styles.button} onPress={handleLogout}>
         <Text style={styles.buttonText}>Logout</Text>

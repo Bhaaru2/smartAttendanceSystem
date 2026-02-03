@@ -9,6 +9,7 @@ import TeacherDashboard from './screens/TeacherDashboard';
 import AdminDashboard from './screens/AdminDashboard';
 import StudentManagement from './screens/StudentManagement';
 import FacultyManagement from './screens/FacultyManagement';
+import ClassManagement from "./screens/ClassManagement";
 
 
 
@@ -65,6 +66,8 @@ export default function App() {
         <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
         <Stack.Screen name="StudentManagement" component={StudentManagement} />
         <Stack.Screen name="FacultyManagement" component={FacultyManagement} />
+        <Stack.Screen name="ClassManagement" component={ClassManagement} />
+
 
       </Stack.Navigator>
     </NavigationContainer>
