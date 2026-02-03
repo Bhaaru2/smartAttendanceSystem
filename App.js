@@ -1,20 +1,68 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useEffect, useState } from 'react';
+import { supabase } from './services/supabase';
+
+import LoginScreen from './screens/LoginScreen';
+import StudentDashboard from './screens/StudentDashboard';
+import TeacherDashboard from './screens/TeacherDashboard';
+import AdminDashboard from './screens/AdminDashboard';
+import StudentManagement from './screens/StudentManagement';
+
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
+  const [initialRoute, setInitialRoute] = useState('Login');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+
+      if (data.session) {
+        const user = data.session.user;
+
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        if (!error && profile) {
+          if (profile.role === 'student') {
+            setInitialRoute('StudentDashboard');
+          } else if (profile.role === 'faculty') {
+            setInitialRoute('TeacherDashboard');
+          } else if (profile.role === 'admin') {
+            setInitialRoute('AdminDashboard');
+          }
+        }
+      }
+
+      setLoading(false);
+    };
+
+    checkSession();
+  }, []);
+
+  if (loading) {
+    return null; 
+  }
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName={initialRoute}>
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen name="StudentDashboard" component={StudentDashboard} />
+        <Stack.Screen name="TeacherDashboard" component={TeacherDashboard} />
+        <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
+        <Stack.Screen name="StudentManagement" component={StudentManagement} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
