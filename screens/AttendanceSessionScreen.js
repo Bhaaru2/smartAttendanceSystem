@@ -3,8 +3,12 @@ import { View, Text, TouchableOpacity, FlatList, Alert, StyleSheet } from "react
 import { Picker } from "@react-native-picker/picker";
 import { supabase } from "../services/supabase";
 import attendanceSessionApi from "../api/attendanceSessionApi";
+import { useRoute } from "@react-navigation/native";
 
-export default function AttendanceSessionScreen({ facultyId }) {
+
+export default function AttendanceSessionScreen() {
+    const route = useRoute();
+    const { facultyId } = route.params;
     const [subjects, setSubjects] = useState([]);
     const [subjectId, setSubjectId] = useState("");
     const [sessions, setSessions] = useState([]);
