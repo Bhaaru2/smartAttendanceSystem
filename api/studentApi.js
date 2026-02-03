@@ -1,3 +1,5 @@
+import { supabase } from "../services/supabase";
+
 const STUDENT_TABLE = "students";
 
 const createStudent = async (body) => {

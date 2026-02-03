@@ -27,7 +27,7 @@ export default function StudentManagement() {
     const fetchStudents = async () => {
         try {
             setLoading(true);
-            const data = await studentApi.getAll();
+            const data = await studentApi.get();
             setStudents(data || []);
         } catch (error) {
             Alert.alert("Error", error.message);
@@ -36,9 +36,9 @@ export default function StudentManagement() {
         }
     };
 
-    useEffect(() => {
-        fetchStudents();
-    }, []);
+    // useEffect(() => {
+    //     fetchStudents();
+    // }, []);
 
     const fetchStudentProfiles = async () => {
         try {
