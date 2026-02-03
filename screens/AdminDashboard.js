@@ -18,6 +18,16 @@ export default function AdminDashboard({ navigation }) {
       >
         <Text style={styles.buttonText}>Manage Students</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => navigation.navigate("FacultyManagement")}
+      >
+        <Text style={styles.buttonText}>Manage Faculty</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.button} onPress={handleLogout}>
+        <Text style={styles.buttonText}>Logout</Text>
+      </TouchableOpacity>
 
     </View>
   );

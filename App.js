@@ -8,6 +8,8 @@ import StudentDashboard from './screens/StudentDashboard';
 import TeacherDashboard from './screens/TeacherDashboard';
 import AdminDashboard from './screens/AdminDashboard';
 import StudentManagement from './screens/StudentManagement';
+import FacultyManagement from './screens/FacultyManagement';
+
 
 
 const Stack = createNativeStackNavigator();
@@ -62,6 +64,8 @@ export default function App() {
         <Stack.Screen name="TeacherDashboard" component={TeacherDashboard} />
         <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
         <Stack.Screen name="StudentManagement" component={StudentManagement} />
+        <Stack.Screen name="FacultyManagement" component={FacultyManagement} />
+
       </Stack.Navigator>
     </NavigationContainer>
   );
