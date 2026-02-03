@@ -10,6 +10,8 @@ import AdminDashboard from './screens/AdminDashboard';
 import StudentManagement from './screens/StudentManagement';
 import FacultyManagement from './screens/FacultyManagement';
 import ClassManagement from "./screens/ClassManagement";
+import SubjectManagement from "./screens/SubjectManagement";
+import AttendanceSessionScreen from "./screens/AttendanceSessionScreen";
 
 
 
@@ -50,7 +52,7 @@ export default function App() {
   }, []);
 
   if (loading) {
-    return null; 
+    return null;
   }
 
   return (
@@ -67,7 +69,8 @@ export default function App() {
         <Stack.Screen name="StudentManagement" component={StudentManagement} />
         <Stack.Screen name="FacultyManagement" component={FacultyManagement} />
         <Stack.Screen name="ClassManagement" component={ClassManagement} />
-
+        <Stack.Screen name="SubjectManagement" component={SubjectManagement} />
+        <Stack.Screen name="AttendanceSessions" component={AttendanceSessionScreen} />
 
       </Stack.Navigator>
     </NavigationContainer>

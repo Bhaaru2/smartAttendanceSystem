@@ -11,6 +11,13 @@ export default function TeacherDashboard({ navigation }) {
     <View style={styles.container}>
       <Text style={styles.title}>Teacher Dashboard</Text>
 
+      <TouchableOpacity
+              style={styles.button}
+              onPress={() => navigation.navigate("AttendanceSessions")}
+            >
+              <Text style={styles.buttonText}>Manage Attendance Sessions</Text>
+            </TouchableOpacity>
+
       <TouchableOpacity style={styles.button} onPress={handleLogout}>
         <Text style={styles.buttonText}>Logout</Text>
       </TouchableOpacity>
