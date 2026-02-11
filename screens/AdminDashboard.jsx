@@ -4,9 +4,9 @@ import { supabase } from '../services/supabase';
 export default function AdminDashboard({ navigation }) {
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigation.replace('Login');
-  };
+  await supabase.auth.signOut();
+};
+
 
   return (
     <View style={styles.container}>

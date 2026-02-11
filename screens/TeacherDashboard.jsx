@@ -33,9 +33,9 @@ export default function TeacherDashboard({ navigation }) {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigation.replace('Login');
-  };
+  await supabase.auth.signOut();
+};
+
 
   return (
     <View style={styles.container}>
