@@ -37,7 +37,32 @@ const getStudents = async () => {
   return data;
 };
 
+const updateStudent = async (id, body) => {
+  const { data, error } = await supabase
+    .from("students")
+    .update(body)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+
+const deleteStudent = async (id) => {
+  const { error } = await supabase
+    .from("students")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+};
+
 export default {
   create: createStudent,
   get: getStudents,
+  update: updateStudent,
+  delete: deleteStudent,
+
 };
