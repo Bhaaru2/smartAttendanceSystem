@@ -8,50 +8,29 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      alert('Please enter both email and password');
-      return;
-    }
-    setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+ const handleLogin = async () => {
+  if (!email || !password) {
+    alert("Please enter both email and password");
+    return;
+  }
 
-    if (error) {
-      alert('Login failed: ' + error.message);
-      setLoading(false);
-      return;
-    }
-    const user = data.user;
+  setLoading(true);
 
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-    setLoading(false);
+  setLoading(false);
 
-    if (profileError) {
-      alert('Failed to fetch user profile: ' + profileError.message);
-      return;
-    }
+  if (error) {
+    alert("Login failed: " + error.message);
+  }
 
+  // 🚫 DO NOT NAVIGATE ANYWHERE
+  // RootNavigator will automatically handle routing
+};
 
-    // const role = 'faculty'; // try 'faculty' or 'admin'
-
-    if (profileData.role === 'student') {
-      navigation.replace('StudentDashboard');
-    } else if (profileData.role === 'faculty') {
-      navigation.replace('TeacherDashboard');
-    } else if (profileData.role === 'admin') {
-      navigation.replace('AdminDashboard');
-    } else {
-      alert('Unknown user role: ' + profileData.role);
-    }
-  };
 
   return (
     <View style={styles.container}>
@@ -61,7 +40,7 @@ export default function LoginScreen({ navigation }) {
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
-        autoCapitalize="none"
+        autoCapitalize="none"S
         style={styles.input}
       />
 
