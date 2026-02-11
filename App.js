@@ -2,6 +2,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useEffect, useState } from 'react';
 import { supabase } from './services/supabase';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
 
 import LoginScreen from './screens/LoginScreen';
 import StudentDashboard from './screens/StudentDashboard';
@@ -13,6 +15,7 @@ import ClassManagement from "./screens/ClassManagement";
 import SubjectManagement from "./screens/SubjectManagement";
 import AttendanceSessionScreen from "./screens/AttendanceSessionScreen";
 
+const queryClient = new QueryClient();
 
 
 const Stack = createNativeStackNavigator();
@@ -56,6 +59,7 @@ export default function App() {
   }
 
   return (
+  <QueryClientProvider client={queryClient}>
     <NavigationContainer>
       <Stack.Navigator initialRouteName={initialRoute}>
         <Stack.Screen
@@ -71,8 +75,9 @@ export default function App() {
         <Stack.Screen name="ClassManagement" component={ClassManagement} />
         <Stack.Screen name="SubjectManagement" component={SubjectManagement} />
         <Stack.Screen name="AttendanceSessions" component={AttendanceSessionScreen} />
-
       </Stack.Navigator>
     </NavigationContainer>
-  );
+  </QueryClientProvider>
+);
+a
 }

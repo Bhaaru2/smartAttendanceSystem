@@ -8,6 +8,8 @@ export default function StudentDashboard({ navigation }) {
     navigation.replace('Login');
   };
 
+  
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Student Dashboard</Text>
