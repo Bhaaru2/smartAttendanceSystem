@@ -13,8 +13,23 @@ const fetchStudentProfiles = async () => {
 
 export const useStudentProfiles = () => {
   return useQuery({
-    queryKey: ["studentProfiles"],
-    queryFn: fetchStudentProfiles,
-    staleTime: 1000 * 60 * 5,
+    queryKey: ["available-student-profiles"],
+    queryFn: async () => {
+
+      const { data: students } = await supabase
+        .from("students")
+        .select("profile_id");
+
+      const usedIds = students?.map(s => s.profile_id) || [];
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("role", "student")
+        .not("id", "in", `(${usedIds.join(",") || "null"})`);
+
+      if (error) throw error;
+      return data;
+    },
   });
 };

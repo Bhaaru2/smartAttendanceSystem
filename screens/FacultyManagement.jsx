@@ -24,6 +24,11 @@ export default function FacultyManagement() {
     const { data: faculty = [], isLoading } = useFaculty();
     const { data: profiles = [] } = useFacultyProfiles();
 
+    const availableProfiles = profiles.filter(
+        (profile) =>
+            !faculty.some((f) => f.profile_id === profile.id)
+    );
+
     const queryClient = useQueryClient();
 
     const createMutation = useMutation({
@@ -72,7 +77,7 @@ export default function FacultyManagement() {
         if (editingFaculty) {
             updateMutation.mutate({
                 id: editingFaculty.id,
-                data: { profile_id: profileId, employee_id: employeeId, department },
+                data: { employee_id: employeeId, department },
             });
         } else {
             createMutation.mutate({
@@ -81,6 +86,7 @@ export default function FacultyManagement() {
                 department,
             });
         }
+
     };
 
     return (
@@ -88,16 +94,30 @@ export default function FacultyManagement() {
             <Text style={styles.title}>Faculty Management (Admin)</Text>
 
             <View style={styles.card}>
-                <Picker
-                    selectedValue={profileId}
-                    onValueChange={setProfileId}
-                    style={styles.input}
-                >
-                    <Picker.Item label="-- Select Faculty --" value="" />
-                    {profiles.map((p) => (
-                        <Picker.Item key={p.id} label={p.name} value={p.id} />
-                    ))}
-                </Picker>
+                {editingFaculty ? (
+                    // 🔒 UPDATE MODE → Show name only
+                    <View style={styles.input}>
+                        <Text>{editingFaculty.profile?.name}</Text>
+                    </View>
+                ) : availableProfiles.length === 0 ? (
+                    // 🚫 No profiles left
+                    <Text style={{ color: "red", marginBottom: 10 }}>
+                        No faculty profiles left to create
+                    </Text>
+                ) : (
+                    // ➕ CREATE MODE
+                    <Picker
+                        selectedValue={profileId}
+                        onValueChange={setProfileId}
+                        style={styles.input}
+                    >
+                        <Picker.Item label="-- Select Faculty --" value="" />
+                        {availableProfiles.map((p) => (
+                            <Picker.Item key={p.id} label={p.name} value={p.id} />
+                        ))}
+                    </Picker>
+                )}
+
 
                 <TextInput
                     placeholder="Employee ID"
@@ -113,11 +133,21 @@ export default function FacultyManagement() {
                     style={styles.input}
                 />
 
-                <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+                <TouchableOpacity
+                    style={[
+                        styles.button,
+                        !editingFaculty && availableProfiles.length === 0 && {
+                            backgroundColor: "#999",
+                        },
+                    ]}
+                    disabled={!editingFaculty && availableProfiles.length === 0}
+                    onPress={handleSubmit}
+                >
                     <Text style={styles.buttonText}>
                         {editingFaculty ? "Update Faculty" : "Create Faculty"}
                     </Text>
                 </TouchableOpacity>
+
             </View>
 
             {isLoading ? (

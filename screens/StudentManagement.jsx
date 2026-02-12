@@ -13,10 +13,91 @@ import studentApi from "../api/studentApi";
 import { useStudents } from "../hooks/useStudents";
 import { useStudentProfiles } from "../hooks/useStudentProfiles";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { useNavigation } from "@react-navigation/native";
+import { useStudentAttendanceSummary } from "../hooks/useStudentAttendanceSummary";
 
 
+function StudentListItem({
+    item,
+    navigation,
+    setEditingStudent,
+    setProfileId,
+    setRollNo,
+    setClassName,
+    setSection,
+    deleteMutation,
+}) {
+    const { data: summary } = useStudentAttendanceSummary(item.id);
+
+    return (
+        <TouchableOpacity
+            style={styles.listItem}
+            onPress={() =>
+                Alert.alert("Student Options", "What would you like to do?", [
+                    {
+                        text: "View Attendance",
+                        onPress: () =>
+                            navigation.navigate("StudentAttendanceAdmin", {
+                                studentId: item.id,
+                                name: item.profile?.name,
+                                roll: item.roll_no,
+                            }),
+                    },
+                    {
+                        text: "Update",
+                        onPress: () => {
+                            setEditingStudent(item);
+                            setProfileId(item.profile_id);
+                            setRollNo(item.roll_no);
+                            setClassName(item.class);
+                            setSection(item.section || "");
+                        },
+                    },
+                    {
+                        text: "Delete",
+                        style: "destructive",
+                        onPress: () =>
+                            Alert.alert(
+                                "Confirm Delete",
+                                "Delete this faculty?",
+                                [
+                                    { text: "Cancel", style: "cancel" },
+                                    {
+                                        text: "Yes, Delete",
+                                        style: "destructive",
+                                        onPress: () =>
+                                            deleteMutation.mutate(item.id),
+                                    },
+                                ]
+                            ),
+                    },
+                    { text: "Cancel", style: "cancel" },
+                ])
+            }
+        >
+            <View style={styles.row}>
+                <View>
+                    <Text style={styles.listText}>
+                        {item.profile?.name || "No Name"} | Roll: {item.roll_no}
+                    </Text>
+                    <Text style={styles.listSub}>
+                        Class: {item.class} {item.section || ""}
+                    </Text>
+                </View>
+
+                <View style={styles.percentageBox}>
+                    <Text style={styles.percentageText}>
+                        {summary?.percentage ?? 0}%
+                    </Text>
+                </View>
+            </View>
+        </TouchableOpacity>
+    );
+}
 
 export default function StudentManagement() {
+    const navigation = useNavigation();
+
     const [profileId, setProfileId] = useState("");
     const [rollNo, setRollNo] = useState("");
     const [className, setClassName] = useState("");
@@ -92,6 +173,13 @@ export default function StudentManagement() {
         },
     });
 
+    const resetForm = () => {
+        setEditingStudent(null);
+        setProfileId("");
+        setRollNo("");
+        setClassName("");
+        setSection("");
+    };
 
     return (
         <View style={styles.container}>
@@ -103,21 +191,36 @@ export default function StudentManagement() {
 
                 <Text style={{ marginBottom: 6 }}>Select Student Profile</Text>
 
-                <View style={styles.input}>
-                    <Picker
-                        selectedValue={profileId}
-                        onValueChange={(value) => setProfileId(value)}
-                    >
-                        <Picker.Item label="-- Select Student --" value="" />
-                        {profiles.map((profile) => (
-                            <Picker.Item
-                                key={profile.id}
-                                label={profile.name}
-                                value={profile.id}
-                            />
-                        ))}
-                    </Picker>
-                </View>
+                {editingStudent ? (
+                    // 🔒 UPDATE MODE → Just show name, no dropdown
+                    <View style={styles.input}>
+                        <Text>{editingStudent.profile?.name}</Text>
+                    </View>
+                ) : profiles.length === 0 ? (
+                    // 🚫 No profiles left
+                    <Text style={{ color: "red", marginBottom: 10 }}>
+                        No student profiles left to create
+                    </Text>
+                ) : (
+                    // ➕ CREATE MODE → Show dropdown
+                    <View style={styles.input}>
+                        <Picker
+                            selectedValue={profileId}
+                            onValueChange={(value) => setProfileId(value)}
+                        >
+                            <Picker.Item label="-- Select Student --" value="" />
+                            {profiles.map((profile) => (
+                                <Picker.Item
+                                    key={profile.id}
+                                    label={profile.name}
+                                    value={profile.id}
+                                />
+                            ))}
+                        </Picker>
+                    </View>
+                )}
+
+
 
                 <TextInput
                     placeholder="Roll No"
@@ -141,13 +244,17 @@ export default function StudentManagement() {
                 />
 
                 <TouchableOpacity
-                    style={styles.button}
+                    style={[
+                        styles.button,
+                        !editingStudent && profiles.length === 0 && { backgroundColor: "#999" },
+                    ]}
+                    disabled={!editingStudent && profiles.length === 0}
+
                     onPress={() => {
                         if (editingStudent) {
                             updateMutation.mutate({
                                 id: editingStudent.id,
                                 data: {
-                                    profile_id: profileId,
                                     roll_no: rollNo,
                                     class: className,
                                     section,
@@ -162,6 +269,7 @@ export default function StudentManagement() {
                         {editingStudent ? "Update Student" : "Create Student"}
                     </Text>
                 </TouchableOpacity>
+
             </View>
 
             {/* List Students */}
@@ -174,53 +282,18 @@ export default function StudentManagement() {
                     data={students}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => (
-                        <TouchableOpacity
-                            style={styles.listItem}
-                            onPress={() =>
-                                Alert.alert(
-                                    "Student Options",
-                                    "What would you like to do?",
-                                    [
-                                        {
-                                            text: "Update",
-                                            onPress: () => {
-                                                setEditingStudent(item);
-                                                setProfileId(item.profile_id);
-                                                setRollNo(item.roll_no);
-                                                setClassName(item.class);
-                                                setSection(item.section || "");
-                                            },
-                                        },
-                                        {
-                                            text: "Delete",
-                                            style: "destructive",
-                                            onPress: () =>
-                                                Alert.alert(
-                                                    "Confirm Delete",
-                                                    "Are you sure you want to delete this student? This action cannot be undone.",
-                                                    [
-                                                        { text: "Cancel", style: "cancel" },
-                                                        {
-                                                            text: "Yes, Delete",
-                                                            style: "destructive",
-                                                            onPress: () => deleteMutation.mutate(item.id),
-                                                        },
-                                                    ]
-                                                ),
-                                        },
-
-                                    ]
-                                )
-                            }
-                        >
-                            <Text style={styles.listText}>
-                                {item.profile?.name || "No Name"} | Roll: {item.roll_no}
-                            </Text>
-                            <Text style={styles.listSub}>
-                                Class: {item.class} {item.section || ""}
-                            </Text>
-                        </TouchableOpacity>
+                        <StudentListItem
+                            item={item}
+                            navigation={navigation}
+                            setEditingStudent={setEditingStudent}
+                            setProfileId={setProfileId}
+                            setRollNo={setRollNo}
+                            setClassName={setClassName}
+                            setSection={setSection}
+                            deleteMutation={deleteMutation}
+                        />
                     )}
+
                 />
 
 
@@ -283,4 +356,22 @@ const styles = StyleSheet.create({
     listSub: {
         color: "#555",
     },
+    row: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+    },
+
+    percentageBox: {
+        backgroundColor: "#e0f2fe",
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: 20,
+    },
+
+    percentageText: {
+        fontWeight: "bold",
+        color: "#2563eb",
+    },
+
 });
