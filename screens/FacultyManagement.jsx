@@ -90,165 +90,238 @@ export default function FacultyManagement() {
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Faculty Management (Admin)</Text>
+  <View style={{ flex: 1, backgroundColor: "#F6F9FC" }}>
 
-            <View style={styles.card}>
-                {editingFaculty ? (
-                    // 🔒 UPDATE MODE → Show name only
-                    <View style={styles.input}>
-                        <Text>{editingFaculty.profile?.name}</Text>
-                    </View>
-                ) : availableProfiles.length === 0 ? (
-                    // 🚫 No profiles left
-                    <Text style={{ color: "red", marginBottom: 10 }}>
-                        No faculty profiles left to create
-                    </Text>
-                ) : (
-                    // ➕ CREATE MODE
-                    <Picker
-                        selectedValue={profileId}
-                        onValueChange={setProfileId}
-                        style={styles.input}
-                    >
-                        <Picker.Item label="-- Select Faculty --" value="" />
-                        {availableProfiles.map((p) => (
-                            <Picker.Item key={p.id} label={p.name} value={p.id} />
-                        ))}
-                    </Picker>
-                )}
+    {/* Header */}
+    <View style={styles.header}>
+      <Text style={styles.headerTitle}>Faculty Management</Text>
+      <Text style={styles.headerSubtitle}>Admin Panel</Text>
+    </View>
 
+    <FlatList
+      ListHeaderComponent={
+        <>
+          {/* Add / Update Card */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>
+              {editingFaculty ? "Update Faculty" : "Add Faculty"}
+            </Text>
 
-                <TextInput
-                    placeholder="Employee ID"
-                    value={employeeId}
-                    onChangeText={setEmployeeId}
-                    style={styles.input}
-                />
-
-                <TextInput
-                    placeholder="Department"
-                    value={department}
-                    onChangeText={setDepartment}
-                    style={styles.input}
-                />
-
-                <TouchableOpacity
-                    style={[
-                        styles.button,
-                        !editingFaculty && availableProfiles.length === 0 && {
-                            backgroundColor: "#999",
-                        },
-                    ]}
-                    disabled={!editingFaculty && availableProfiles.length === 0}
-                    onPress={handleSubmit}
-                >
-                    <Text style={styles.buttonText}>
-                        {editingFaculty ? "Update Faculty" : "Create Faculty"}
-                    </Text>
-                </TouchableOpacity>
-
-            </View>
-
-            {isLoading ? (
-                <Text>Loading...</Text>
+            {editingFaculty ? (
+              <View style={styles.input}>
+                <Text>{editingFaculty.profile?.name}</Text>
+              </View>
+            ) : profiles.length === 0 ? (
+              <Text style={{ color: "red", marginBottom: 10 }}>
+                No faculty profiles left to create
+              </Text>
             ) : (
-                <FlatList
-                    data={faculty}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity
-                            style={styles.listItem}
-                            onPress={() =>
-                                Alert.alert("Faculty Options", "", [
-                                    {
-                                        text: "Update",
-                                        onPress: () => {
-                                            setEditingFaculty(item);
-                                            setProfileId(item.profile_id);
-                                            setEmployeeId(item.employee_id);
-                                            setDepartment(item.department || "");
-                                        },
-                                    },
-                                    {
-                                        text: "Delete",
-                                        style: "destructive",
-                                        onPress: () =>
-                                            Alert.alert(
-                                                "Confirm Delete",
-                                                "Delete this faculty?",
-                                                [
-                                                    { text: "Cancel", style: "cancel" },
-                                                    {
-                                                        text: "Yes, Delete",
-                                                        style: "destructive",
-                                                        onPress: () =>
-                                                            deleteMutation.mutate(item.id),
-                                                    },
-                                                ]
-                                            ),
-                                    },
-                                    { text: "Cancel", style: "cancel" },
-                                ])
-                            }
-                        >
-                            <Text style={styles.listText}>
-                                {item.profile?.name} | {item.employee_id}
-                            </Text>
-                            <Text style={styles.listSub}>{item.department}</Text>
-                        </TouchableOpacity>
-                    )}
-                />
+              <View style={styles.input}>
+                <Picker
+                  selectedValue={profileId}
+                  onValueChange={setProfileId}
+                >
+                  <Picker.Item label="Select Faculty" value="" />
+                  {profiles.map((p) => (
+                    <Picker.Item
+                      key={p.id}
+                      label={p.name}
+                      value={p.id}
+                    />
+                  ))}
+                </Picker>
+              </View>
             )}
-        </View>
-    );
+
+            <TextInput
+              placeholder="Employee ID"
+              value={employeeId}
+              onChangeText={setEmployeeId}
+              style={styles.input}
+            />
+
+            <TextInput
+              placeholder="Department"
+              value={department}
+              onChangeText={setDepartment}
+              style={styles.input}
+            />
+
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={handleSubmit}
+            >
+              <Text style={styles.primaryButtonText}>
+                {editingFaculty ? "Update Faculty" : "Create Faculty"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.sectionTitle}>Faculty List</Text>
+        </>
+      }
+
+      data={faculty}
+      keyExtractor={(item) => item.id}
+      renderItem={({ item }) => (
+        <TouchableOpacity
+          style={styles.listItem}
+          onPress={() =>
+            Alert.alert("Faculty Options", "What would you like to do?", [
+              {
+                text: "Update",
+                onPress: () => {
+                  setEditingFaculty(item);
+                  setProfileId(item.profile_id);
+                  setEmployeeId(item.employee_id);
+                  setDepartment(item.department || "");
+                },
+              },
+              {
+                text: "Delete",
+                style: "destructive",
+                onPress: () =>
+                  Alert.alert(
+                    "Confirm Delete",
+                    "Delete this faculty?",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      {
+                        text: "Yes, Delete",
+                        style: "destructive",
+                        onPress: () =>
+                          deleteMutation.mutate(item.id),
+                      },
+                    ]
+                  ),
+              },
+            ])
+          }
+        >
+          <View style={styles.row}>
+            <View>
+              <Text style={styles.listText}>
+                {item.profile?.name}
+              </Text>
+              <Text style={styles.listSub}>
+                ID: {item.employee_id}
+              </Text>
+              <Text style={styles.listSub}>
+                {item.department}
+              </Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      )}
+
+      contentContainerStyle={{ padding: 16 }}
+    />
+  </View>
+);
+
 }
 
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 16,
-    },
-    title: {
-        fontSize: 22,
-        fontWeight: "bold",
-        textAlign: "center",
-    },
-    subtitle: {
-        fontSize: 16,
-        fontWeight: "600",
-        marginVertical: 8,
-    },
-    card: {
-        borderWidth: 1,
-        borderColor: "#ddd",
-        padding: 16,
-        marginBottom: 16,
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        marginBottom: 10,
-    },
-    button: {
-        backgroundColor: "#2563eb",
-        padding: 12,
-        alignItems: "center",
-    },
-    buttonText: {
-        color: "#fff",
-        fontWeight: "bold",
-    },
-    listItem: {
-        padding: 12,
-        borderBottomWidth: 1,
-        borderColor: "#eee",
-    },
-    listText: {
-        fontWeight: "600",
-    },
-    listSub: {
-        color: "#555",
-    },
+  header: {
+    backgroundColor: "#4CA6A8",
+    paddingTop: 60,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+  headerTitle: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "bold",
+  },
+  headerSubtitle: {
+    color: "#E0F7F8",
+    marginTop: 4,
+  },
+
+  card: {
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 20,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 12,
+  },
+
+  input: {
+    borderWidth: 1,
+    borderColor: "#eee",
+    backgroundColor: "#F8FAFC",
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 10,
+  },
+
+  primaryButton: {
+    backgroundColor: "#4CA6A8",
+    padding: 14,
+    borderRadius: 14,
+    alignItems: "center",
+    marginTop: 6,
+  },
+
+  primaryButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+
+  listItem: {
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 18,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.03,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+
+  listText: {
+    fontWeight: "600",
+    fontSize: 15,
+  },
+
+  listSub: {
+    color: "#666",
+    marginTop: 4,
+  },
+
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  percentageBox: {
+    backgroundColor: "#E6F7F7",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+  },
+
+  percentageText: {
+    fontWeight: "bold",
+    color: "#4CA6A8",
+  },
 });
