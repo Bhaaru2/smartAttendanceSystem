@@ -8,28 +8,34 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
- const handleLogin = async () => {
-  if (!email || !password) {
-    alert("Please enter both email and password");
-    return;
-  }
+  const handleLogin = async () => {
+    if (!email || !password) {
+      alert("Please enter both email and password");
+      return;
+    }
 
-  setLoading(true);
+    setLoading(true);
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-  setLoading(false);
+    setLoading(false);
 
-  if (error) {
-    alert("Login failed: " + error.message);
-  }
+    if (error) {
+      alert("Login failed: " + error.message);
+      if (profile.role === "pending") {
+        Alert.alert("Your account is waiting for admin approval");
+        await supabase.auth.signOut();
+        return;
+      }
 
-  // 🚫 DO NOT NAVIGATE ANYWHERE
-  // RootNavigator will automatically handle routing
-};
+    }
+
+    // 🚫 DO NOT NAVIGATE ANYWHERE
+    // RootNavigator will automatically handle routing
+  };
 
 
   return (
@@ -40,7 +46,7 @@ export default function LoginScreen({ navigation }) {
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
-        autoCapitalize="none"S
+        autoCapitalize="none" S
         style={styles.input}
       />
 

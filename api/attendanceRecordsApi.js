@@ -11,8 +11,50 @@ const markAttendance = async ({
     throw new Error("Session, student and marker are required");
   }
 
+  // 1️⃣ Get session
+  const { data: session, error: sessionError } = await supabase
+    .from("attendance_sessions")
+    .select("subject_id")
+    .eq("id", session_id)
+    .single();
+
+  if (sessionError || !session) {
+    throw new Error("Invalid session");
+  }
+
+  // 2️⃣ Get subject class & section
+  const { data: subject, error: subjectError } = await supabase
+    .from("subjects")
+    .select("class, section")
+    .eq("id", session.subject_id)
+    .single();
+
+  if (subjectError || !subject) {
+    throw new Error("Subject not found");
+  }
+
+  // 3️⃣ Get student class & section
+  const { data: student, error: studentError } = await supabase
+    .from("students")
+    .select("class, section")
+    .eq("id", student_id)
+    .single();
+
+  if (studentError || !student) {
+    throw new Error("Student not found");
+  }
+
+  // 4️⃣ Validate
+  if (
+    student.class !== subject.class ||
+    student.section !== subject.section
+  ) {
+    throw new Error("You are not allowed to attend this session");
+  }
+
+  // 5️⃣ Insert attendance
   const { data, error } = await supabase
-    .from(TABLE)
+    .from("attendance_records")
     .insert([{
       session_id,
       student_id,
@@ -25,8 +67,12 @@ const markAttendance = async ({
     .single();
 
   if (error) throw new Error(error.message);
+
   return data;
 };
+
+
+
 const getSessionAttendance = async (sessionId) => {
   const { data, error } = await supabase
     .from("attendance_records")
@@ -63,8 +109,31 @@ const getStudentAttendance = async (studentId) => {
   if (error) throw new Error(error.message);
   return data;
 };
+
+const getBySession = async (sessionId) => {
+  const { data, error } = await supabase
+    .from("attendance_records")
+    .select(`
+      id,
+      marked_at,
+      student:student_id (
+        id,
+        profile:profile_id ( name ),
+        roll_no
+      )
+    `)
+    .eq("session_id", sessionId)
+    .order("marked_at", { ascending: true });
+
+  if (error) throw new Error(error.message);
+
+  return data;
+};
+
+
 export default {
   markAttendance,
   getSessionAttendance,
   getStudentAttendance,
+  getBySession,
 };

@@ -4,8 +4,8 @@ import { supabase } from '../services/supabase';
 export default function AdminDashboard({ navigation }) {
 
   const handleLogout = async () => {
-  await supabase.auth.signOut();
-};
+    await supabase.auth.signOut();
+  };
 
 
   return (
@@ -30,12 +30,20 @@ export default function AdminDashboard({ navigation }) {
       >
         <Text style={styles.buttonText}>Manage Classes</Text>
       </TouchableOpacity>
-       <TouchableOpacity
+      <TouchableOpacity
         style={styles.button}
         onPress={() => navigation.navigate("SubjectManagement")}
       >
         <Text style={styles.buttonText}>Manage Subjects</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => navigation.navigate("AssignRole")}
+      >
+        <Text style={styles.buttonText}>Assign Roles</Text>
+      </TouchableOpacity>
+
 
       <TouchableOpacity style={styles.button} onPress={handleLogout}>
         <Text style={styles.buttonText}>Logout</Text>

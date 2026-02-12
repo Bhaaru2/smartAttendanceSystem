@@ -1,6 +1,6 @@
 import { supabase } from "../services/supabase";
 
-const TABLE = "student_subject";
+const TABLE = "student_subjects";
 
 const createStudentSubject = async ({ student_id, subject_id }) => {
   if (!student_id || !subject_id) {

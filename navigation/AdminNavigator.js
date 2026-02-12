@@ -5,6 +5,7 @@ import StudentManagement from "../screens/StudentManagement";
 import FacultyManagement from "../screens/FacultyManagement";
 import ClassManagement from "../screens/ClassManagement";
 import SubjectManagement from "../screens/SubjectManagement";
+import AdminAssignRoleScreen from "../screens/AdminAssignRoleScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -16,6 +17,8 @@ export default function AdminNavigator() {
       <Stack.Screen name="FacultyManagement" component={FacultyManagement} />
       <Stack.Screen name="ClassManagement" component={ClassManagement} />
       <Stack.Screen name="SubjectManagement" component={SubjectManagement} />
+      <Stack.Screen name="AssignRole" component={AdminAssignRoleScreen} />
+
     </Stack.Navigator>
   );
 }

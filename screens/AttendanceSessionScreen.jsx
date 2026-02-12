@@ -3,7 +3,8 @@ import { View, Text, TouchableOpacity, FlatList, Alert, StyleSheet } from "react
 import { Picker } from "@react-native-picker/picker";
 import { supabase } from "../services/supabase";
 import attendanceSessionApi from "../api/attendanceSessionApi";
-import { useRoute } from "@react-navigation/native";
+import { useRoute, useNavigation } from "@react-navigation/native";
+
 
 
 export default function AttendanceSessionScreen() {
@@ -12,6 +13,8 @@ export default function AttendanceSessionScreen() {
     const [subjects, setSubjects] = useState([]);
     const [subjectId, setSubjectId] = useState("");
     const [sessions, setSessions] = useState([]);
+    const navigation = useNavigation();
+
 
     const fetchData = async () => {
         const [{ data: s }, sessionData] = await Promise.all([
@@ -27,24 +30,24 @@ export default function AttendanceSessionScreen() {
         fetchData();
     }, []);
 
-    const handleCreateSession = async () => {
-        try {
-            const today = new Date();
-            const isoDate = today.toISOString().split("T")[0];
+    // const handleCreateSession = async () => {
+    //     try {
+    //         const today = new Date();
+    //         const isoDate = today.toISOString().split("T")[0];
 
-            await attendanceSessionApi.create({
-                subject_id: subjectId,
-                faculty_id: facultyId,
-                conducted_on: isoDate,
-                started_at: new Date().toISOString(),
-            });
+    //         await attendanceSessionApi.create({
+    //             subject_id: subjectId,
+    //             faculty_id: facultyId,
+    //             conducted_on: isoDate,
+    //             started_at: new Date().toISOString(),
+    //         });
 
-            Alert.alert("Success", "Attendance session started");
-            fetchData();
-        } catch (e) {
-            Alert.alert("Error", e.message);
-        }
-    };
+    //         Alert.alert("Success", "Attendance session started");
+    //         fetchData();
+    //     } catch (e) {
+    //         Alert.alert("Error", e.message);
+    //     }
+    // };
 
     return (
         <View style={styles.container}>
@@ -61,7 +64,21 @@ export default function AttendanceSessionScreen() {
                 ))}
             </Picker>
 
-            <TouchableOpacity style={styles.button} onPress={handleCreateSession}>
+            <TouchableOpacity
+                style={styles.button}
+                onPress={() => {
+                    if (!subjectId) {
+                        Alert.alert("Please select a subject");
+                        return;
+                    }
+
+                    navigation.navigate("TeacherAttendance", {
+                        facultyId,
+                        subjectId,
+                    });
+                }}
+            >
+
                 <Text style={styles.buttonText}>Start Session</Text>
             </TouchableOpacity>
 
@@ -69,10 +86,17 @@ export default function AttendanceSessionScreen() {
                 data={sessions}
                 keyExtractor={i => i.id}
                 renderItem={({ item }) => (
-                    <View style={styles.listItem}>
+                    <TouchableOpacity
+                        style={styles.listItem}
+                        onPress={() =>
+                            navigation.navigate("SessionDetails", {
+                                sessionId: item.id,
+                            })
+                        }
+                    >
                         <Text>{item.subject?.name}</Text>
                         <Text>{item.conducted_on}</Text>
-                    </View>
+                    </TouchableOpacity>
                 )}
             />
         </View>
