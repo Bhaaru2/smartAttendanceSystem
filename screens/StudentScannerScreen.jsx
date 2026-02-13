@@ -1,27 +1,15 @@
-import { CameraView, useCameraPermissions } from "expo-camera";
+import { CameraView } from "expo-camera";
+import * as Camera from "expo-camera";
 import { View, Text, Alert, StyleSheet } from "react-native";
 import { useState } from "react";
 import attendanceRecordsApi from "../api/attendanceRecordsApi";
 
+
+
 export default function StudentScannerScreen({ route, navigation }) {
   const { studentId } = route.params;
-  const [permission, requestPermission] = useCameraPermissions();
+  const [permission, requestPermission] = Camera.useCameraPermissions();
   const [scanned, setScanned] = useState(false);
-
-  if (!permission) {
-    return <View />;
-  }
-
-  if (!permission.granted) {
-    return (
-      <View style={styles.center}>
-        <Text>Camera permission required</Text>
-        <Text onPress={requestPermission} style={styles.permissionBtn}>
-          Grant Permission
-        </Text>
-      </View>
-    );
-  }
 
   const handleScan = async ({ data }) => {
     if (scanned) return;
@@ -57,52 +45,32 @@ export default function StudentScannerScreen({ route, navigation }) {
       Alert.alert("Error", e.message);
       setScanned(false);
     }
+    console.log("QR DATA:", parsed);
+
   };
 
+  if (!permission) {
+    return <View style={{ flex: 1 }} />;
+  }
+
+  if (!permission.granted) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>Camera permission required</Text>
+        <Text onPress={requestPermission} style={{ color: "blue", marginTop: 10 }}>
+          Grant Permission
+        </Text>
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
+    <View style={{ flex: 1 }}>
       <CameraView
-        style={styles.camera}
+        style={{ flex: 1 }}
         barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-        onBarcodeScanned={handleScan}
+        onBarcodeScanned={scanned ? undefined : handleScan}
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginTop: 10,
-    marginBottom: 8,
-  },
-  scanButton: {
-    backgroundColor: "#2563eb",
-    padding: 12,
-    alignItems: "center",
-    borderRadius: 6,
-    marginBottom: 20,
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  card: {
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 6,
-    marginBottom: 8,
-  },
-});
-

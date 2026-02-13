@@ -9,15 +9,36 @@ const createStudent = async (body) => {
     throw new Error("Missing required fields");
   }
 
-  const { data, error } = await supabase
+  // 1️⃣ Insert student
+  const { data: student, error } = await supabase
     .from(STUDENT_TABLE)
     .insert([{ profile_id, roll_no, class: className, section }])
     .select()
     .single();
 
   if (error) throw new Error(error.message);
-  return data;
+
+  // 2️⃣ Get subjects of that class + section
+  const { data: subjects } = await supabase
+    .from("subjects")
+    .select("id")
+    .eq("class", className)
+    .eq("section", section);
+
+  // 3️⃣ Map them
+  if (subjects && subjects.length > 0) {
+    const mappings = subjects.map((s) => ({
+      student_id: student.id,
+      subject_id: s.id,
+      joined_at: new Date().toISOString(),
+    }));
+
+    await supabase.from("student_subjects").insert(mappings);
+  }
+
+  return student;
 };
+
 
 const getStudents = async () => {
   const { data, error } = await supabase

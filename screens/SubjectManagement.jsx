@@ -43,17 +43,28 @@ export default function SubjectManagement() {
   const queryClient = useQueryClient();
 
   const createMutation = useMutation({
-    mutationFn: subjectsApi.create,
-    onSuccess: () => {
-      queryClient.invalidateQueries(["subjects"]);
-      setSuccessMessage("Subject created successfully");
-      setSuccessVisible(true);
-      setName("");
-      setFacultyId("");
-      setClassId("");
-      setSection("");
-    },
-  });
+  mutationFn: subjectsApi.create,
+
+  onSuccess: () => {
+    queryClient.invalidateQueries(["subjects"]);
+    setSuccessMessage("Subject created successfully");
+    setModalType("success");
+    setSuccessVisible(true);
+
+    setName("");
+    setFacultyId("");
+    setClassId("");
+    setSection("");
+  },
+
+  onError: (error) => {
+    console.log("SUBJECT CREATE ERROR:", error);
+    setSuccessMessage(error.message || "Failed to create subject");
+    setModalType("error");
+    setSuccessVisible(true);
+  },
+});
+
 
   const handleCreate = () => {
     if (!name || !facultyId || !classId || !section) {

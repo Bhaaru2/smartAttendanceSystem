@@ -1,19 +1,35 @@
 import { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, FlatList, Alert, StyleSheet } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import {
+    View,
+    Text,
+    FlatList,
+    TouchableOpacity,
+    Modal,
+    Alert,
+} from "react-native";
+
 import { supabase } from "../services/supabase";
 import attendanceSessionApi from "../api/attendanceSessionApi";
 import { useRoute, useNavigation } from "@react-navigation/native";
 
-
+import AppContainer from "../components/AppContainer";
+import ScreenHeader from "../components/ScreenHeader";
+import AppCard from "../components/AppCard";
+import PrimaryButton from "../components/PrimaryButton";
+import SuccessModal from "../components/SuccessModal";
 
 export default function AttendanceSessionScreen() {
     const route = useRoute();
     const { facultyId } = route.params;
+    const navigation = useNavigation();
+
     const [subjects, setSubjects] = useState([]);
     const [subjectId, setSubjectId] = useState("");
     const [sessions, setSessions] = useState([]);
-    const navigation = useNavigation();
+    const [subjectModalVisible, setSubjectModalVisible] = useState(false);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalMessage, setModalMessage] = useState("");
+    const [modalType, setModalType] = useState("success");
 
 
     const fetchData = async () => {
@@ -30,104 +46,167 @@ export default function AttendanceSessionScreen() {
         fetchData();
     }, []);
 
-    // const handleCreateSession = async () => {
-    //     try {
-    //         const today = new Date();
-    //         const isoDate = today.toISOString().split("T")[0];
-
-    //         await attendanceSessionApi.create({
-    //             subject_id: subjectId,
-    //             faculty_id: facultyId,
-    //             conducted_on: isoDate,
-    //             started_at: new Date().toISOString(),
-    //         });
-
-    //         Alert.alert("Success", "Attendance session started");
-    //         fetchData();
-    //     } catch (e) {
-    //         Alert.alert("Error", e.message);
-    //     }
-    // };
-
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Attendance Sessions</Text>
+        <AppContainer>
+            <ScreenHeader
+                title="Attendance Sessions"
+                subtitle="Manage your sessions"
+            />
 
-            <Picker
-                selectedValue={subjectId}
-                onValueChange={setSubjectId}
-                style={styles.input}
-            >
-                <Picker.Item label="Select Subject" value="" />
-                {subjects.map(s => (
-                    <Picker.Item key={s.id} label={s.name} value={s.id} />
-                ))}
-            </Picker>
+            {/* ================= SELECT SUBJECT ================= */}
+            <AppCard>
+                <TouchableOpacity
+                    style={{
+                        backgroundColor: "#F8FAFC",
+                        padding: 14,
+                        borderRadius: 14,
+                        borderWidth: 1,
+                        borderColor: "#4CA6A8",
+                        marginBottom: 16,
+                    }}
+                    onPress={() => setSubjectModalVisible(true)}
+                >
+                    <Text
+                        style={{
+                            color: subjectId ? "#000" : "#999",
+                            fontSize: 15,
+                            fontWeight: "500",
+                        }}
+                    >
+                        {subjectId
+                            ? subjects.find((s) => s.id === subjectId)?.name
+                            : "Select Subject"}
+                    </Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity
-                style={styles.button}
-                onPress={() => {
-                    if (!subjectId) {
-                        Alert.alert("Please select a subject");
-                        return;
-                    }
+                <PrimaryButton
+                    title="Start Session"
+                    onPress={() => {
+                        if (!subjectId) {
+                            setModalMessage("Please select a subject before starting the session.");
+                            setModalType("error");
+                            setModalVisible(true);
+                            return;
+                        }
 
-                    navigation.navigate("TeacherAttendance", {
-                        facultyId,
-                        subjectId,
-                    });
-                }}
-            >
+                        navigation.navigate("TeacherAttendance", {
+                            facultyId,
+                            subjectId,
+                        });
+                    }}
 
-                <Text style={styles.buttonText}>Start Session</Text>
-            </TouchableOpacity>
+                />
+
+            </AppCard>
+
+            {/* ================= SESSION LIST ================= */}
+            <View style={{ paddingHorizontal: 16, marginTop: 20 }}>
+                <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 12 }}>
+                    Previous Sessions
+                </Text>
+            </View>
 
             <FlatList
                 data={sessions}
-                keyExtractor={i => i.id}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
                 renderItem={({ item }) => (
-                    <TouchableOpacity
-                        style={styles.listItem}
+                    <AppCard
                         onPress={() =>
                             navigation.navigate("SessionDetails", {
                                 sessionId: item.id,
                             })
                         }
                     >
-                        <Text>{item.subject?.name}</Text>
-                        <Text>{item.conducted_on}</Text>
-                    </TouchableOpacity>
+                        <Text style={{ fontWeight: "600", fontSize: 16 }}>
+                            {item.subject?.name}
+                        </Text>
+
+                        <Text style={{ marginTop: 4, color: "#666" }}>
+                            {item.conducted_on}
+                        </Text>
+
+                        {item.started_at && (
+                            <Text style={{ marginTop: 2, color: "#4CA6A8", fontSize: 13 }}>
+                                Started at: {new Date(item.started_at).toLocaleTimeString()}
+                            </Text>
+                        )}
+                    </AppCard>
+
                 )}
             />
-        </View>
+
+            {/* ================= SUBJECT MODAL ================= */}
+            <Modal visible={subjectModalVisible} transparent animationType="fade">
+                <View
+                    style={{
+                        flex: 1,
+                        backgroundColor: "rgba(0,0,0,0.4)",
+                        justifyContent: "center",
+                        alignItems: "center",
+                    }}
+                >
+                    <View
+                        style={{
+                            width: "85%",
+                            backgroundColor: "#fff",
+                            borderRadius: 20,
+                            padding: 20,
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: 16,
+                                fontWeight: "bold",
+                                marginBottom: 12,
+                            }}
+                        >
+                            Select Subject
+                        </Text>
+
+                        <FlatList
+                            data={subjects}
+                            keyExtractor={(item) => item.id}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    style={{ paddingVertical: 12 }}
+                                    onPress={() => {
+                                        setSubjectId(item.id);
+                                        setSubjectModalVisible(false);
+                                    }}
+                                >
+                                    <Text>{item.name}</Text>
+                                </TouchableOpacity>
+                            )}
+                        />
+
+                        <TouchableOpacity
+                            onPress={() => setSubjectModalVisible(false)}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: "center",
+                                    marginTop: 10,
+                                    color: "#4CA6A8",
+                                }}
+                            >
+                                Cancel
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+
+                </View>
+            </Modal>
+            <SuccessModal
+                visible={modalVisible}
+                message={modalMessage}
+                type={modalType}
+                onClose={() => {
+                    setModalVisible(false);
+                    setModalType("success");
+                }}
+            />
+        </AppContainer>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 16
-    },
-    title: {
-        fontSize: 22,
-        fontWeight: "bold",
-        textAlign: "center"
-    },
-    input: {
-        borderWidth: 1,
-        marginBottom: 10
-    },
-    button: {
-        backgroundColor: "#2563eb",
-        padding: 12,
-        alignItems: "center"
-    },
-    buttonText: {
-        color: "#fff",
-        fontWeight: "bold"
-    },
-    listItem: {
-        padding: 10,
-        borderBottomWidth: 1
-    }
-});

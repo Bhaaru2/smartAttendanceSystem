@@ -16,16 +16,16 @@ const markAttendance = async ({
     .from("attendance_sessions")
     .select("subject_id")
     .eq("id", session_id)
-    .single();
+    .maybeSingle();
 
   if (sessionError || !session) {
     throw new Error("Invalid session");
   }
 
-  // 2️⃣ Get subject class & section
+  // 2️⃣ Get subject
   const { data: subject, error: subjectError } = await supabase
     .from("subjects")
-    .select("class, section")
+    .select("section")
     .eq("id", session.subject_id)
     .single();
 
@@ -33,7 +33,7 @@ const markAttendance = async ({
     throw new Error("Subject not found");
   }
 
-  // 3️⃣ Get student class & section
+  // 3️⃣ Get student
   const { data: student, error: studentError } = await supabase
     .from("students")
     .select("class, section")
@@ -44,15 +44,12 @@ const markAttendance = async ({
     throw new Error("Student not found");
   }
 
-  // 4️⃣ Validate
-  if (
-    student.class !== subject.class ||
-    student.section !== subject.section
-  ) {
+  // 4️⃣ Validate section only (since you use text class)
+  if (student.section !== subject.section) {
     throw new Error("You are not allowed to attend this session");
   }
 
-  // 5️⃣ Insert attendance
+  // 5️⃣ Insert attendance (NOT update)
   const { data, error } = await supabase
     .from("attendance_records")
     .insert([{
@@ -61,8 +58,9 @@ const markAttendance = async ({
       status: "present",
       method: "qr",
       marked_at: new Date().toISOString(),
-      marked_by,
+      marked_by: null, // OR remove this field completely
     }])
+
     .select()
     .single();
 
@@ -70,6 +68,7 @@ const markAttendance = async ({
 
   return data;
 };
+
 
 
 
