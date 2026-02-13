@@ -17,6 +17,7 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { useNavigation } from "@react-navigation/native";
 import { useStudentAttendanceSummary } from "../hooks/useStudentAttendanceSummary";
 import ActionModal from "../components/ActionModal";
+import ScreenHeader from "../components/ScreenHeader";
 import SuccessModal from "../components/SuccessModal";
 
 
@@ -83,6 +84,7 @@ export default function StudentManagement() {
   const [successMessage, setSuccessMessage] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [modalType, setModalType] = useState("success");
 
 
 
@@ -112,11 +114,12 @@ export default function StudentManagement() {
 
   const handleCreateStudent = () => {
     if (!profileId || !rollNo || !className) {
-      Alert.alert(
-        "Validation",
-        "Profile ID, Roll No, and Class are required"
-      );
+      setSuccessMessage("Profile, Roll No, and Class are required");
+      setSuccessVisible(true);
+      setModalType("error");
+
       return;
+
     }
 
     createMutation.mutate({
@@ -162,10 +165,11 @@ export default function StudentManagement() {
     <View style={{ flex: 1, backgroundColor: "#F6F9FC" }}>
 
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Student Management</Text>
-        <Text style={styles.headerSubtitle}>Admin Panel</Text>
-      </View>
+      <ScreenHeader
+        title="Student Management"
+        subtitle="Admin Panel"
+      />
+
 
       <FlatList
         ListHeaderComponent={
@@ -344,8 +348,13 @@ export default function StudentManagement() {
       <SuccessModal
         visible={successVisible}
         message={successMessage}
-        onClose={() => setSuccessVisible(false)}
+        type={modalType}
+        onClose={() => {
+          setSuccessVisible(false);
+          setModalType("success");
+        }}
       />
+
 
       <Modal transparent visible={deleteModalVisible} animationType="fade">
         <View style={styles.overlay}>
@@ -387,24 +396,6 @@ export default function StudentManagement() {
 
 
 const styles = StyleSheet.create({
-  header: {
-    backgroundColor: "#4CA6A8",
-    paddingTop: 60,
-    paddingBottom: 30,
-    paddingHorizontal: 20,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-  },
-  headerTitle: {
-    color: "#fff",
-    fontSize: 22,
-    fontWeight: "bold",
-  },
-  headerSubtitle: {
-    color: "#E0F7F8",
-    marginTop: 4,
-  },
-
   card: {
     backgroundColor: "#fff",
     padding: 16,

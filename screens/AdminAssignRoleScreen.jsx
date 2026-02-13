@@ -1,11 +1,16 @@
+import { useState } from "react";
 import {
   View,
   Text,
   FlatList,
-  TouchableOpacity,
   StyleSheet,
-  Alert,
 } from "react-native";
+
+import ScreenHeader from "../components/ScreenHeader";
+import AppCard from "../components/AppCard";
+import PrimaryButton from "../components/PrimaryButton";
+import SuccessModal from "../components/SuccessModal";
+
 import {
   usePendingUsers,
   useAssignRole,
@@ -15,87 +20,100 @@ export default function AdminAssignRoleScreen() {
   const { data: users = [], isLoading } = usePendingUsers();
   const assignMutation = useAssignRole();
 
+  const [successVisible, setSuccessVisible] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+
   const handleAssign = (id, role) => {
     assignMutation.mutate(
       { id, role },
       {
-        onSuccess: () =>
-          Alert.alert("Success", `Assigned as ${role}`),
-        onError: (e) =>
-          Alert.alert("Error", e.message),
+        onSuccess: () => {
+          setSuccessMessage(`Assigned as ${role}`);
+          setSuccessVisible(true);
+        },
       }
     );
   };
 
-  if (isLoading) return <Text style={{ padding: 20 }}>Loading...</Text>;
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Assign Role</Text>
+    <View style={{ flex: 1, backgroundColor: "#F6F9FC" }}>
 
-      {users.length === 0 && (
-        <Text>No pending users</Text>
-      )}
+      {/* Header */}
+      <ScreenHeader
+        title="Assign Roles"
+        subtitle="Admin Panel"
+      />
 
       <FlatList
+        contentContainerStyle={{ padding: 16 }}
         data={users}
         keyExtractor={(item) => item.id}
+        ListEmptyComponent={
+          !isLoading && (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>
+                No pending users to assign roles.
+              </Text>
+            </View>
+          )
+        }
         renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.name}>{item.name}</Text>
+          <AppCard>
+            <Text style={styles.name}>
+              {item.name}
+            </Text>
 
             <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={styles.studentButton}
-                onPress={() => handleAssign(item.id, "student")}
-              >
-                <Text style={styles.buttonText}>Make Student</Text>
-              </TouchableOpacity>
+              <PrimaryButton
+                title="Make Student"
+                onPress={() =>
+                  handleAssign(item.id, "student")
+                }
+                style={{ flex: 1, marginRight: 8 }}
+              />
 
-              <TouchableOpacity
-                style={styles.facultyButton}
-                onPress={() => handleAssign(item.id, "faculty")}
-              >
-                <Text style={styles.buttonText}>Make Faculty</Text>
-              </TouchableOpacity>
+              <PrimaryButton
+                title="Make Faculty"
+                onPress={() =>
+                  handleAssign(item.id, "faculty")
+                }
+                style={{
+                  flex: 1,
+                  backgroundColor: "#2ECC71",
+                }}
+              />
             </View>
-          </View>
+          </AppCard>
         )}
+      />
+
+      <SuccessModal
+        visible={successVisible}
+        message={successMessage}
+        onClose={() => setSuccessVisible(false)}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  title: { fontSize: 22, fontWeight: "bold", marginBottom: 16 },
-  card: {
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    marginBottom: 12,
-  },
   name: {
     fontSize: 16,
-    marginBottom: 10,
+    fontWeight: "600",
+    marginBottom: 14,
   },
+
   buttonRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
   },
-  studentButton: {
-    backgroundColor: "#2563eb",
-    padding: 10,
-    borderRadius: 6,
+
+  emptyContainer: {
+    marginTop: 40,
+    alignItems: "center",
   },
-  facultyButton: {
-    backgroundColor: "#16a34a",
-    padding: 10,
-    borderRadius: 6,
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
+
+  emptyText: {
+    color: "#777",
+    fontSize: 16,
   },
 });

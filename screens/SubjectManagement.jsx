@@ -5,16 +5,22 @@ import {
   TextInput,
   TouchableOpacity,
   FlatList,
-  Alert,
   StyleSheet,
+  Modal,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
-import { useQueryClient, useMutation } from "@tanstack/react-query";
+
+import AppContainer from "../components/AppContainer";
+import ScreenHeader from "../components/ScreenHeader";
+import AppCard from "../components/AppCard";
+import PrimaryButton from "../components/PrimaryButton";
+import SuccessModal from "../components/SuccessModal";
 
 import { useSubjects } from "../hooks/useSubjects";
 import { useFacultyList } from "../hooks/useFacultyList";
 import { useClassesList } from "../hooks/useClassesList";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import subjectsApi from "../api/subjectsApi";
+
 
 export default function SubjectManagement() {
   const [name, setName] = useState("");
@@ -22,7 +28,15 @@ export default function SubjectManagement() {
   const [classId, setClassId] = useState("");
   const [section, setSection] = useState("");
 
-  const { data: subjects = [], isLoading } = useSubjects();
+  const [facultyModalVisible, setFacultyModalVisible] = useState(false);
+  const [classModalVisible, setClassModalVisible] = useState(false);
+  const [modalType, setModalType] = useState("success"); 
+ 
+
+  const [successVisible, setSuccessVisible] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const { data: subjects = [] } = useSubjects();
   const { data: faculty = [] } = useFacultyList();
   const { data: classes = [] } = useClassesList();
 
@@ -32,113 +46,179 @@ export default function SubjectManagement() {
     mutationFn: subjectsApi.create,
     onSuccess: () => {
       queryClient.invalidateQueries(["subjects"]);
-
-      Alert.alert("Success", "Subject created");
-
+      setSuccessMessage("Subject created successfully");
+      setSuccessVisible(true);
       setName("");
       setFacultyId("");
       setClassId("");
       setSection("");
     },
-    onError: (error) => {
-      Alert.alert("Error", error.message);
-    },
   });
 
   const handleCreate = () => {
     if (!name || !facultyId || !classId || !section) {
-      Alert.alert("Validation", "All fields required");
+      setSuccessMessage("All fields required");
+      setSuccessVisible(true);
+      setModalType("error"); 
+
       return;
     }
-
-    const selectedClass = classes.find((c) => c.id === classId);
 
     createMutation.mutate({
       name,
       faculty_id: facultyId,
       class_id: classId,
-      classText: selectedClass?.name,
       section,
     });
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Subject Management (Admin)</Text>
-
-      <TextInput
-        placeholder="Subject Name"
-        value={name}
-        onChangeText={setName}
-        style={styles.input}
+    <AppContainer>
+      <ScreenHeader
+        title="Subject Management"
+        subtitle="Admin Panel"
       />
 
-      <Picker
-        selectedValue={facultyId}
-        onValueChange={setFacultyId}
-        style={styles.input}
-      >
-        <Picker.Item label="Select Faculty" value="" />
-        {faculty.map((f) => (
-          <Picker.Item
-            key={f.id}
-            label={f.profile?.name}
-            value={f.id}
-          />
-        ))}
-      </Picker>
-
-      <Picker
-        selectedValue={classId}
-        onValueChange={setClassId}
-        style={styles.input}
-      >
-        <Picker.Item label="Select Class" value="" />
-        {classes.map((c) => (
-          <Picker.Item key={c.id} label={c.name} value={c.id} />
-        ))}
-      </Picker>
-
-      <TextInput
-        placeholder="Section"
-        value={section}
-        onChangeText={setSection}
-        style={styles.input}
-      />
-
-      <TouchableOpacity style={styles.button} onPress={handleCreate}>
-        <Text style={styles.buttonText}>Create Subject</Text>
-      </TouchableOpacity>
-
-      {isLoading ? (
-        <Text>Loading...</Text>
-      ) : (
-        <FlatList
-          data={subjects}
-          keyExtractor={(i) => i.id}
-          renderItem={({ item }) => (
-            <View style={styles.listItem}>
-              <Text>{item.name}</Text>
-              <Text>
-                {item.class?.name} | {item.faculty?.profile?.name}
-              </Text>
-            </View>
-          )}
+      <AppCard>
+        <TextInput
+          placeholder="Subject Name"
+          value={name}
+          onChangeText={setName}
+          style={{ marginBottom: 12 }}
         />
-      )}
-    </View>
+
+        {/* Faculty Dropdown */}
+        <TouchableOpacity
+  style={styles.selectBox}
+  onPress={() => setFacultyModalVisible(true)}
+>
+  <Text
+    style={[
+      styles.selectText,
+      { color: facultyId ? "#000" : "#999" },
+    ]}
+  >
+    {facultyId
+      ? faculty.find((f) => f.id === facultyId)?.profile?.name
+      : "Select Faculty"}
+  </Text>
+</TouchableOpacity>
+
+
+        {/* Class Dropdown */}
+        <TouchableOpacity
+  style={[styles.selectBox, { marginTop: 16 }]}
+  onPress={() => setClassModalVisible(true)}
+>
+  <Text
+    style={[
+      styles.selectText,
+      { color: classId ? "#000" : "#999" },
+    ]}
+  >
+    {classId
+      ? classes.find((c) => c.id === classId)?.name
+      : "Select Class"}
+  </Text>
+</TouchableOpacity>
+
+
+        <TextInput
+          placeholder="Section"
+          value={section}
+          onChangeText={setSection}
+          style={{ marginBottom: 12 }}
+        />
+
+        <PrimaryButton title="Create Subject" onPress={handleCreate} />
+      </AppCard>
+
+      {/* Faculty Modal */}
+      <Modal visible={facultyModalVisible} transparent animationType="fade">
+        <View style={{ flex:1, justifyContent:"center", alignItems:"center", backgroundColor:"rgba(0,0,0,0.4)" }}>
+          <View style={{ backgroundColor:"#fff", width:"85%", borderRadius:20, padding:20 }}>
+            <Text style={{ fontWeight:"bold", marginBottom:10 }}>Select Faculty</Text>
+
+            <FlatList
+              data={faculty}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={{ paddingVertical:12 }}
+                  onPress={() => {
+                    setFacultyId(item.id);
+                    setFacultyModalVisible(false);
+                  }}
+                >
+                  <Text>{item.profile?.name}</Text>
+                </TouchableOpacity>
+              )}
+            />
+
+            <TouchableOpacity onPress={() => setFacultyModalVisible(false)}>
+              <Text style={{ textAlign:"center", marginTop:10, color:"#4CA6A8" }}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Class Modal */}
+      <Modal visible={classModalVisible} transparent animationType="fade">
+        <View style={{ flex:1, justifyContent:"center", alignItems:"center", backgroundColor:"rgba(0,0,0,0.4)" }}>
+          <View style={{ backgroundColor:"#fff", width:"85%", borderRadius:20, padding:20 }}>
+            <Text style={{ fontWeight:"bold", marginBottom:10 }}>Select Class</Text>
+
+            <FlatList
+              data={classes}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={{ paddingVertical:12 }}
+                  onPress={() => {
+                    setClassId(item.id);
+                    setClassModalVisible(false);
+                  }}
+                >
+                  <Text>{item.name}</Text>
+                </TouchableOpacity>
+              )}
+            />
+
+            <TouchableOpacity onPress={() => setClassModalVisible(false)}>
+              <Text style={{ textAlign:"center", marginTop:10, color:"#4CA6A8" }}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <SuccessModal
+        visible={successVisible}
+        message={successMessage}
+        type={modalType} 
+        onClose={() => {
+          setSuccessVisible(false);
+          setModalType("success");
+        }}
+      />
+    </AppContainer>
   );
 }
-
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  title: { fontSize: 22, fontWeight: "bold", textAlign: "center" },
-  input: { borderWidth: 1, marginBottom: 10, padding: 10 },
-  button: {
-    backgroundColor: "#2563eb",
-    padding: 12,
-    alignItems: "center",
-  },
-  buttonText: { color: "#fff", fontWeight: "bold" },
-  listItem: { padding: 10, borderBottomWidth: 1 },
+selectBox: {
+  backgroundColor: "#F8FAFC",
+  padding: 14,
+  borderRadius: 14,
+  borderWidth: 1,
+  borderColor: "#4CA6A8",
+  marginBottom: 12,
+},
+
+selectText: {
+  fontSize: 15,
+  fontWeight: "500",
+},
 });

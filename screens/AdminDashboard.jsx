@@ -1,76 +1,105 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { supabase } from '../services/supabase';
+import { View, Text, FlatList, ScrollView } from "react-native";
+import { supabase } from "../services/supabase";
+
+import AppContainer from "../components/AppContainer";
+import ScreenHeader from "../components/ScreenHeader";
+import StatCard from "../components/StatCard";
+import DashboardButton from "../components/DashboardButton";
+
+import { useStudents } from "../hooks/useStudents";
+import { useFaculty } from "../hooks/useFaculty";
+import { useClasses } from "../hooks/useClasses";
+import { useSubjects } from "../hooks/useSubjects";
 
 export default function AdminDashboard({ navigation }) {
+  const { data: students = [] } = useStudents();
+  const { data: faculty = [] } = useFaculty();
+  const { data: classes = [] } = useClasses();
+  const { data: subjects = [] } = useSubjects();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
 
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Admin Dashboard</Text>
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("StudentManagement")}
+    <AppContainer>
+      <ScreenHeader
+        title="Admin Dashboard"
+        subtitle="Overview & Management"
+      />
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.buttonText}>Manage Students</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("FacultyManagement")}
-      >
-        <Text style={styles.buttonText}>Manage Faculty</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("ClassManagement")}
-      >
-        <Text style={styles.buttonText}>Manage Classes</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("SubjectManagement")}
-      >
-        <Text style={styles.buttonText}>Manage Subjects</Text>
-      </TouchableOpacity>
+        {/* ===== STATS SECTION ===== */}
+        <View style={{ flexDirection: "row", padding: 10 }}>
+          <StatCard
+            label="Students"
+            value={students.length}
+            icon="people-outline"
+          />
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("AssignRole")}
-      >
-        <Text style={styles.buttonText}>Assign Roles</Text>
-      </TouchableOpacity>
+          <StatCard
+            label="Faculty"
+            value={faculty.length}
+            icon="person-outline"
+          />
+        </View>
 
+        <View style={{ flexDirection: "row", padding: 10 }}>
+          <StatCard
+            label="Classes"
+            value={classes.length}
+            icon="school-outline"
+          />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogout}>
-        <Text style={styles.buttonText}>Logout</Text>
-      </TouchableOpacity>
+          <StatCard
+            label="Subjects"
+            value={subjects.length}
+            icon="book-outline"
+          />
+        </View>
 
-    </View>
+        {/* ===== ACTIONS SECTION ===== */}
+        <View style={{ padding: 16 }}>
+          <DashboardButton
+            title="Manage Students"
+            icon="people-outline"
+            onPress={() => navigation.navigate("StudentManagement")}
+          />
+
+          <DashboardButton
+            title="Manage Faculty"
+            icon="person-outline"
+            onPress={() => navigation.navigate("FacultyManagement")}
+          />
+
+          <DashboardButton
+            title="Manage Classes"
+            icon="school-outline"
+            onPress={() => navigation.navigate("ClassManagement")}
+          />
+
+          <DashboardButton
+            title="Manage Subjects"
+            icon="book-outline"
+            onPress={() => navigation.navigate("SubjectManagement")}
+          />
+
+          <DashboardButton
+            title="Assign Roles"
+            icon="key-outline"
+            onPress={() => navigation.navigate("AssignRole")}
+          />
+
+          <DashboardButton
+            title="Logout"
+            icon="log-out-outline"
+            onPress={handleLogout}
+          />
+
+        </View>
+      </ScrollView>
+    </AppContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  button: {
-    backgroundColor: '#ef4444',
-    padding: 12,
-    borderRadius: 8,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-});

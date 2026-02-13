@@ -1,11 +1,11 @@
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
-export default function SuccessModal({ visible, message, onClose }) {
+export default function SuccessModal({ visible, message, onClose, type = "success"  }) {
   return (
     <Modal transparent visible={visible} animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.modal}>
-          <Text style={styles.title}>Success 🎉</Text>
+          <Text style={styles.title}> {type === "error" ? "Validation ⚠️" : "Success 🎉"}</Text>
           <Text style={styles.message}>{message}</Text>
 
           <TouchableOpacity style={styles.button} onPress={onClose}>
