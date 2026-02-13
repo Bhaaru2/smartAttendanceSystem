@@ -1,7 +1,8 @@
 import { View, Text, ScrollView } from "react-native";
 import { supabase } from "../services/supabase";
-import { useRoute, useNavigation } from "@react-navigation/native";
-import { useEffect, useState } from "react";
+import { useNavigation } from "@react-navigation/native";
+import { useQuery } from "@tanstack/react-query";
+import attendanceRecordsApi from "../api/attendanceRecordsApi";
 
 import AppContainer from "../components/AppContainer";
 import ScreenHeader from "../components/ScreenHeader";
@@ -11,68 +12,81 @@ import AttendanceCircle from "../components/AttendanceCircle";
 import StatCard from "../components/StatCard";
 
 import { useStudentSubjects } from "../hooks/useStudentSubjects";
-import { useStudentAttendance } from "../hooks/useStudentAttendance";
 import { useActiveSessions } from "../hooks/useActiveSessions";
 
 export default function StudentDashboard() {
-  const route = useRoute();
   const navigation = useNavigation();
-const [studentId, setStudentId] = useState(null);
-const [loading, setLoading] = useState(true);
+
+  /* ================= STUDENT PROFILE ================= */
+
+  const {
+    data: student,
+    isLoading: studentLoading,
+  } = useQuery({
+    queryKey: ["studentProfile"],
+    queryFn: async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData.session?.user;
+
+      if (!user) return null;
+
+      const { data, error } = await supabase
+        .from("students")
+        .select("id, roll_no, class, section")
+        .eq("profile_id", user.id)
+        .single();
+
+      if (error) throw new Error(error.message);
+
+      return data;
+    },
+  });
+
+  const studentId = student?.id;
+
+  /* ================= STUDENT STATS ================= */
+
+  const {
+    data: stats = { total: 0, present: 0 },
+  } = useQuery({
+    queryKey: ["studentStats", studentId],
+    queryFn: () => attendanceRecordsApi.getStudentStats(studentId),
+    enabled: !!studentId,
+  });
+
+  /* ================= SUBJECTS ================= */
 
   const { data: subjects = [] } = useStudentSubjects(studentId);
-  const { data: attendance = [] } = useStudentAttendance(studentId);
   const { data: activeSessions = [] } = useActiveSessions();
+
+  /* ================= ATTENDANCE CALC ================= */
+
+  const total = stats.total;
+  const present = stats.present;
+  const percentage = total
+    ? ((present / total) * 100).toFixed(1)
+    : 0;
+
+  /* ================= LOGOUT ================= */
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
 
-  /* ================= Attendance Calculation ================= */
+  /* ================= LOADING STATE ================= */
 
-  const attendanceList = Array.isArray(attendance) ? attendance : [];
+  if (studentLoading) {
+    return (
+      <AppContainer>
+        <ScreenHeader
+          title="Student Dashboard"
+          subtitle="Loading..."
+        />
+      </AppContainer>
+    );
+  }
 
-const total = attendanceList.length;
-const present = attendanceList.filter(a => a.status === "present").length;
-const percentage = total ? ((present / total) * 100).toFixed(1) : 0;
-
-
-  useEffect(() => {
-  const fetchStudent = async () => {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const user = sessionData.session?.user;
-
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
-    const { data: student } = await supabase
-      .from("students")
-      .select("id")
-      .eq("profile_id", user.id)
-      .single();
-
-    if (student) {
-      setStudentId(student.id);
-    }
-
-    setLoading(false);
-  };
-
-  fetchStudent();
-}, []);
-
-if (loading) {
-  return (
-    <AppContainer>
-      <ScreenHeader
-        title="Student Dashboard"
-        subtitle="Loading..."
-      />
-    </AppContainer>
-  );
-}
+  /* ================= UI ================= */
 
   return (
     <AppContainer>
@@ -85,35 +99,70 @@ if (loading) {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           flexGrow: 1,
-          justifyContent: "space-between"
+          justifyContent: "space-between",
         }}
       >
         <View>
 
-          {/* ================= Attendance Circle ================= */}
-          <View style={{ alignItems: "center", marginTop: 20 }}>
+          {/* ================= STUDENT INFO CARD ================= */}
+
+          {student && (
+            <View style={{ paddingHorizontal: 16, marginTop: 20 }}>
+              <AppCard>
+                <Text style={{ fontWeight: "600", fontSize: 16 }}>
+                  Roll No: {student.roll_no}
+                </Text>
+                <Text style={{ marginTop: 4, color: "#666" }}>
+                  Class: {student.class}
+                </Text>
+                <Text style={{ marginTop: 2, color: "#666" }}>
+                  Section: {student.section}
+                </Text>
+              </AppCard>
+            </View>
+          )}
+
+          {/* ================= ATTENDANCE CIRCLE ================= */}
+
+          <View style={{ alignItems: "center", marginTop: 30 }}>
             <AttendanceCircle percentage={percentage} />
             <Text style={{ marginTop: 10, color: "#666" }}>
               Overall Attendance
             </Text>
           </View>
 
-          {/* ================= Attendance Stats ================= */}
+          {/* ================= STATS CARDS ================= */}
+
           <View
             style={{
               flexDirection: "row",
               justifyContent: "space-between",
               paddingHorizontal: 16,
-              marginTop: 30
+              marginTop: 30,
             }}
           >
-            <StatCard label="Total" value={total} icon="calendar-outline" />
-            <StatCard label="Present" value={present} icon="checkmark-circle-outline" />
+            <StatCard
+              label="Total"
+              value={total}
+              icon="calendar-outline"
+            />
+            <StatCard
+              label="Present"
+              value={present}
+              icon="checkmark-circle-outline"
+            />
           </View>
 
-          {/* ================= Subjects ================= */}
+          {/* ================= SUBJECTS ================= */}
+
           <View style={{ paddingHorizontal: 16, marginTop: 30 }}>
-            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 12 }}>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "bold",
+                marginBottom: 12,
+              }}
+            >
               My Subjects
             </Text>
 
@@ -124,8 +173,12 @@ if (loading) {
 
               return (
                 <AppCard key={item.id}>
-
-                  <Text style={{ fontWeight: "600", fontSize: 16 }}>
+                  <Text
+                    style={{
+                      fontWeight: "600",
+                      fontSize: 16,
+                    }}
+                  >
                     {item.subject.name}
                   </Text>
 
@@ -143,15 +196,14 @@ if (loading) {
                       />
                     </View>
                   )}
-
                 </AppCard>
               );
             })}
           </View>
-
         </View>
 
-        {/* ================= Logout ================= */}
+        {/* ================= LOGOUT ================= */}
+
         <View style={{ padding: 16 }}>
           <DashboardButton
             title="Logout"
@@ -159,9 +211,7 @@ if (loading) {
             onPress={handleLogout}
           />
         </View>
-
       </ScrollView>
     </AppContainer>
   );
-  
 }

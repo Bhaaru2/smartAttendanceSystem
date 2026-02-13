@@ -128,6 +128,40 @@ const getBySession = async (sessionId) => {
 
   return data;
 };
+const getStudentStats = async (studentId) => {
+  // 1️⃣ Get subjects student enrolled in
+  const { data: subjects } = await supabase
+    .from("student_subjects")
+    .select("subject_id")
+    .eq("student_id", studentId);
+
+  const subjectIds = subjects?.map(s => s.subject_id) || [];
+
+  if (!subjectIds.length) {
+    return { total: 0, present: 0 };
+  }
+
+  // 2️⃣ Get all sessions for those subjects
+  const { data: sessions } = await supabase
+    .from("attendance_sessions")
+    .select("id")
+    .in("subject_id", subjectIds);
+
+  const sessionIds = sessions?.map(s => s.id) || [];
+
+  // 3️⃣ Get present records
+  const { data: records } = await supabase
+    .from("attendance_records")
+    .select("session_id, status")
+    .eq("student_id", studentId)
+    .eq("status", "present");
+
+  return {
+    total: sessionIds.length,
+    present: records?.length || 0
+  };
+};
+
 
 
 export default {
@@ -135,4 +169,6 @@ export default {
   getSessionAttendance,
   getStudentAttendance,
   getBySession,
+  getStudentStats,
+
 };
