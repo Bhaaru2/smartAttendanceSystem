@@ -56,7 +56,7 @@ const markAttendance = async ({
       session_id,
       student_id,
       status: "present",
-      method: "qr",
+      method: "manual",
       marked_at: new Date().toISOString(),
       marked_by: null, // OR remove this field completely
     }])

@@ -21,85 +21,90 @@ export default function AdminDashboard({ navigation }) {
     await supabase.auth.signOut();
   };
 
-  return (
-    <AppContainer>
+ return (
+  <AppContainer>
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={{
+        paddingBottom: 120,
+      }}
+      showsVerticalScrollIndicator={true}
+    >
+
       <ScreenHeader
         title="Admin Dashboard"
         subtitle="Overview & Management"
       />
-      <ScrollView
-        contentContainerStyle={{ paddingBottom: 40 }}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* ===== STATS SECTION ===== */}
-        <View style={{ flexDirection: "row", padding: 10 }}>
-          <StatCard
-            label="Students"
-            value={students.length}
-            icon="people-outline"
-          />
 
-          <StatCard
-            label="Faculty"
-            value={faculty.length}
-            icon="person-outline"
-          />
-        </View>
+      {/* ===== STATS SECTION ===== */}
+      <View style={{ flexDirection: "row", padding: 10 }}>
+        <StatCard
+          label="Students"
+          value={students.length}
+          icon="people-outline"
+        />
+        <StatCard
+          label="Faculty"
+          value={faculty.length}
+          icon="person-outline"
+        />
+      </View>
 
-        <View style={{ flexDirection: "row", padding: 10 }}>
-          <StatCard
-            label="Classes"
-            value={classes.length}
-            icon="school-outline"
-          />
+      <View style={{ flexDirection: "row", padding: 10 }}>
+        <StatCard
+          label="Classes"
+          value={classes.length}
+          icon="school-outline"
+        />
+        <StatCard
+          label="Subjects"
+          value={subjects.length}
+          icon="book-outline"
+        />
+      </View>
 
-          <StatCard
-            label="Subjects"
-            value={subjects.length}
-            icon="book-outline"
-          />
-        </View>
+      {/* ===== ACTIONS SECTION ===== */}
+      <View style={{ padding: 16 }}>
+        <DashboardButton
+          title="Manage Students"
+          icon="people-outline"
+          onPress={() => navigation.navigate("StudentManagement")}
+        />
 
-        {/* ===== ACTIONS SECTION ===== */}
-        <View style={{ padding: 16 }}>
-          <DashboardButton
-            title="Manage Students"
-            icon="people-outline"
-            onPress={() => navigation.navigate("StudentManagement")}
-          />
+        <DashboardButton
+          title="Manage Faculty"
+          icon="person-outline"
+          onPress={() => navigation.navigate("FacultyManagement")}
+        />
 
-          <DashboardButton
-            title="Manage Faculty"
-            icon="person-outline"
-            onPress={() => navigation.navigate("FacultyManagement")}
-          />
+        <DashboardButton
+          title="Manage Classes"
+          icon="school-outline"
+          onPress={() => navigation.navigate("ClassManagement")}
+        />
 
-          <DashboardButton
-            title="Manage Classes"
-            icon="school-outline"
-            onPress={() => navigation.navigate("ClassManagement")}
-          />
+        <DashboardButton
+          title="Manage Subjects"
+          icon="book-outline"
+          onPress={() => navigation.navigate("SubjectManagement")}
+        />
 
-          <DashboardButton
-            title="Manage Subjects"
-            icon="book-outline"
-            onPress={() => navigation.navigate("SubjectManagement")}
-          />
+        <DashboardButton
+          title="Assign Roles"
+          icon="key-outline"
+          onPress={() => navigation.navigate("AssignRole")}
+        />
 
-          <DashboardButton
-            title="Assign Roles"
-            icon="key-outline"
-            onPress={() => navigation.navigate("AssignRole")}
-          />
+        <DashboardButton
+          title="Logout"
+          icon="log-out-outline"
+          onPress={handleLogout}
+        />
+      </View>
 
-          <DashboardButton
-            title="Logout"
-            icon="log-out-outline"
-            onPress={handleLogout}
-          />
+    </ScrollView>
+  </AppContainer>
+);
 
-        </View>
-      </ScrollView>
-    </AppContainer>
-  );
+
 }

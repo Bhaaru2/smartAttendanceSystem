@@ -15,6 +15,7 @@ export default function TeacherNavigator() {
       <Stack.Screen name="AttendanceSessions" component={AttendanceSessionScreen} />
             <Stack.Screen name="TeacherAttendance" component={TeacherAttendanceScreen} />
             <Stack.Screen name="SessionDetails" component={SessionDetailsScreen} />
+            
 
     </Stack.Navigator>
   );

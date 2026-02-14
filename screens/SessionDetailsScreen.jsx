@@ -13,6 +13,9 @@ const { data = [], isLoading, error } = useSessionDetails(sessionId);
 
     if (isLoading) return <Text style={{ padding: 20 }}>Loading...</Text>;
     if (error) return <Text style={{ padding: 20 }}>Error loading data</Text>;
+    console.log("SESSION ID:", sessionId);
+console.log("DATA:", data);
+
 
     return (
         <View style={styles.container}>

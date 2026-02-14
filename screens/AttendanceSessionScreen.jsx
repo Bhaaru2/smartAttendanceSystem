@@ -45,6 +45,20 @@ export default function AttendanceSessionScreen() {
     useEffect(() => {
         fetchData();
     }, []);
+    const handlePress = async (sessionId) => {
+        const { data } = await supabase
+            .from("attendance_records")
+            .select("id")
+            .eq("session_id", sessionId);
+
+        if (!data.length) {
+            Alert.alert("No attendance marked yet");
+            return;
+        }
+
+        navigation.navigate("SessionDetails", { sessionId });
+    };
+
 
     return (
         <AppContainer>
@@ -111,29 +125,16 @@ export default function AttendanceSessionScreen() {
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
                 renderItem={({ item }) => (
-                    <AppCard
-                        onPress={() =>
-                            navigation.navigate("SessionDetails", {
-                                sessionId: item.id,
-                            })
-                        }
+                    <TouchableOpacity
+                        onPress={() => handlePress(item.id)}
                     >
-                        <Text style={{ fontWeight: "600", fontSize: 16 }}>
-                            {item.subject?.name}
-                        </Text>
-
-                        <Text style={{ marginTop: 4, color: "#666" }}>
-                            {item.conducted_on}
-                        </Text>
-
-                        {item.started_at && (
-                            <Text style={{ marginTop: 2, color: "#4CA6A8", fontSize: 13 }}>
-                                Started at: {new Date(item.started_at).toLocaleTimeString()}
-                            </Text>
-                        )}
-                    </AppCard>
-
+                        <AppCard>
+                            <Text>{item.subject.name}</Text>
+                            <Text>{item.conducted_on}</Text>
+                        </AppCard>
+                    </TouchableOpacity>
                 )}
+
             />
 
             {/* ================= SUBJECT MODAL ================= */}
